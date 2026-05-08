@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gpt-gateway
+  config:
+    # 从 Nacos 加载远程路由配置。
+    # optional 可避免 Nacos 未就绪时网关启动失败。
+    import:
+      - optional:nacos:gateway-routes.yaml?group=GATEWAY_GROUP&refreshEnabled=true
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      username: nacos
+      password: nacos
+      discovery:
+        enabled: true
+        namespace: modelGateway
+      config:
+        enabled: true
+        namespace: modelGateway
+        file-extension: yaml
+    gateway:
+      discovery:
+        locator:
+          # 自动路由模式：/{service-id}/** -> lb://{service-id}
+          enabled: true
+          lower-case-service-id: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

@@ -1,0 +1,20 @@
+server:
+  port: 18081
+
+spring:
+  application:
+    name: demo-json-service
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      username: nacos
+      password: nacos
+      discovery:
+        enabled: true
+        namespace: modelGateway
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
