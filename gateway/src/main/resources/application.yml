@@ -33,3 +33,18 @@ management:
     web:
       exposure:
         include: health,info,gateway
+
+gateway:
+  filters:
+    logging:
+      enabled: true
+      log-request-body: true
+      log-response-body: true
+      max-body-log-size: 2048
+    rate-limit:
+      enabled: true
+      # 每个客户端 IP 每秒补充的令牌数。
+      replenish-rate: 50
+      # 每个客户端 IP 允许的瞬时突发请求数。
+      burst-capacity: 100
+      cleanup-interval: 10m

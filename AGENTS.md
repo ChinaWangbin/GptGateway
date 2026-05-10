@@ -23,6 +23,25 @@ Always respond in Chinese-simplified
 - `demo-json-service`：JSON 测试服务（注册到 Nacos）
 - `demo-stream-service`：SSE 流式测试服务（不注册到 Nacos，走静态路由）
 
+## Gateway 全局过滤器（当前实现）
+
+- 基础全局过滤器：`BasicGlobalFilter`
+  - 为每个请求生成或透传 `X-Trace-Id`。
+  - 将 traceId 写入 `ServerWebExchange` 属性，供日志和后续过滤器使用。
+- 访问日志全局过滤器：`AccessLogGlobalFilter`
+  - 记录请求开始、请求结束、耗时、状态码、响应字节数。
+  - 支持记录请求体和响应体预览，默认最大记录 `2048` 字节。
+  - 响应体日志采用数据块旁路预览方式，不聚合完整响应，避免破坏 SSE 流式返回。
+- 限流全局过滤器：`GlobalRateLimitFilter`
+  - 当前使用手写令牌桶实现，便于学习限流原理。
+  - 限流维度优先取 `X-Forwarded-For` 首个 IP，没有代理头时取 `remoteAddress`。
+  - 令牌不足时直接返回 `429 Too Many Requests`。
+  - 当前不使用 Sentinel 限流；如后续切换 Sentinel，需要同步调整依赖、配置和本说明。
+- 过滤器配置入口：`GatewayFilterProperties`
+  - 配置前缀：`gateway.filters`
+  - 日志配置：`gateway.filters.logging`
+  - 限流配置：`gateway.filters.rate-limit`
+
 ## Nacos 约定
 
 - Nacos 地址：`http://localhost:8848/nacos`
@@ -51,6 +70,10 @@ Always respond in Chinese-simplified
 
 - 根依赖管理：`pom.xml`
 - 网关配置：`gateway/src/main/resources/application.yml`
+- 网关过滤器配置属性：`gateway/src/main/java/com/example/gateway/config/GatewayFilterProperties.java`
+- 网关基础全局过滤器：`gateway/src/main/java/com/example/gateway/filter/BasicGlobalFilter.java`
+- 网关访问日志过滤器：`gateway/src/main/java/com/example/gateway/filter/AccessLogGlobalFilter.java`
+- 网关令牌桶限流过滤器：`gateway/src/main/java/com/example/gateway/filter/GlobalRateLimitFilter.java`
 - JSON 服务配置：`demo-json-service/src/main/resources/application.yml`
 - SSE 服务配置：`demo-stream-service/src/main/resources/application.yml`
 - Nacos 路由模板：`nacos-config/gateway-routes.yaml`
@@ -72,6 +95,8 @@ Always respond in Chinese-simplified
   - `curl "http://localhost:8080/demo-json-service/api/hello"`
 - 自定义路由（SSE）：
   - `curl -N "http://localhost:8080/stream-api/stream/ticks?count=5"`
+- 网关模块编译：
+  - `mvn -pl gateway -DskipTests clean package`
 
 ## 维护说明
 
@@ -82,3 +107,6 @@ Always respond in Chinese-simplified
 - `demo-stream-service` 当前设计为“非注册式服务”，如改为注册式，需要同步调整：
   - `demo-stream-service` 依赖与配置
   - `gateway-routes.yaml` 的 `uri`（静态地址改 `lb://service-name`）
+- 若调整网关日志或限流策略，需同步修改：
+  - `gateway/src/main/resources/application.yml` 的 `gateway.filters.*` 配置
+  - 对应的全局过滤器实现与本说明文档
