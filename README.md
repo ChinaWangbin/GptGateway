@@ -97,3 +97,36 @@ curl "http://localhost:8080/demo-json-service/api/hello"
 - SSE 路由不生效：检查 Nacos 中 `gateway-routes.yaml` 是否在 `modelGateway` 命名空间。
 - 自动路由不生效：检查 `demo-json-service` 是否注册到 `modelGateway`。
 - SSE 非流式输出：使用 `curl -N`，并检查路径是否为 `/stream-api/...`。
+
+## 8. 开发热更新
+
+三个模块均已加入 `spring-boot-devtools`：
+
+- `gateway`
+- `demo-json-service`
+- `demo-stream-service`
+
+开发时仍按模块分别启动：
+
+```bash
+mvn -pl demo-json-service spring-boot:run
+mvn -pl demo-stream-service spring-boot:run
+mvn -pl gateway spring-boot:run
+```
+
+DevTools 监听的是编译后的 `target/classes`。修改 Java 代码后，需要 IDE 或 Maven 触发编译，DevTools 才会自动重启对应模块并加载新代码。
+
+IntelliJ IDEA 建议开启：
+
+- `Settings > Build, Execution, Deployment > Compiler > Build project automatically`
+- `Settings > Advanced Settings > Allow auto-make to start even if developed application is currently running`
+
+能力边界：
+
+- 修改 Controller 方法内容：自动快速重启后生效。
+- 新增 Controller、新增接口、新增 Bean：自动快速重启后生效。
+- 修改 `application.yml`：自动快速重启后生效。
+- 修改 Nacos 中的 `gateway-routes.yaml`：网关可通过 Nacos 配置刷新加载，不一定需要本地重启。
+- 修改 `pom.xml` 或新增依赖：通常需要停止并重新执行 `spring-boot:run`。
+
+注意：DevTools 是“自动快速重启”，不是 JVM 原地热替换。若要求新增 Controller/Bean 时进程完全不重启，需要使用 JRebel 或 DCEVM + HotswapAgent。
