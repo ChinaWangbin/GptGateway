@@ -2,6 +2,7 @@ package com.example.streamservice.controller;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.http.MediaType;
@@ -36,5 +37,65 @@ public class StreamDemoController {
                             .data(payload)
                             .build();
                 });
+    }
+
+    /**
+     * 模拟真实模型流式返回（按 token/片段逐步输出）。
+     */
+    @GetMapping(value = "/model/mock", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> mockModelStream(
+            @RequestParam(name = "prompt", defaultValue = "请介绍一下模型网关的作用。") String prompt) {
+
+        long streamId = sequence.incrementAndGet();
+        List<String> chunks = List.of(
+                "模型网关的核心作用是统一入口，",
+                "把不同模型服务屏蔽在后面，",
+                "对上层应用提供稳定的一致接口。",
+                "它还可以集中处理鉴权、",
+                "限流、审计和路由策略，",
+                "降低业务侧的接入复杂度。");
+
+        Flux<ServerSentEvent<String>> head = Flux.just(ServerSentEvent.<String>builder()
+                .id(streamId + "-0")
+                .event("message")
+                .data("{\"id\":\"chatcmpl-" + streamId + "\",\"model\":\"mock-gpt-4o-mini\",\"prompt\":\""
+                        + escapeJson(prompt)
+                        + "\",\"delta\":\"\"}")
+                .build());
+
+        Flux<ServerSentEvent<String>> body = Flux.fromIterable(chunks)
+                .index()
+                .delayElements(Duration.ofMillis(450))
+                .map(tuple -> {
+                    long idx = tuple.getT1() + 1;
+                    String delta = tuple.getT2();
+                    String payload = "{\"id\":\"chatcmpl-" + streamId
+                            + "\",\"model\":\"mock-gpt-4o-mini\",\"index\":" + idx
+                            + ",\"delta\":\"" + escapeJson(delta) + "\"}";
+                    return ServerSentEvent.<String>builder()
+                            .id(streamId + "-" + idx)
+                            .event("message")
+                            .data(payload)
+                            .build();
+                });
+
+        Flux<ServerSentEvent<String>> done = Flux.just(ServerSentEvent.<String>builder()
+                .id(streamId + "-done")
+                .event("done")
+                .data("{\"id\":\"chatcmpl-" + streamId + "\",\"finish_reason\":\"stop\"}")
+                .build());
+
+        return Flux.concat(head, body, done);
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 }
