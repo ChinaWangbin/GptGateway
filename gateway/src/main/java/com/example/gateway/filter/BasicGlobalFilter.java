@@ -2,6 +2,7 @@ package com.example.gateway.filter;
 
 import java.util.UUID;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -11,6 +12,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -22,6 +24,16 @@ public class BasicGlobalFilter implements GlobalFilter, Ordered {
     public static final String TRACE_ID_HEADER = "X-Trace-Id";
 
     public static final String TRACE_ID_ATTRIBUTE = "traceId";
+
+    /**
+     * 启用 Reactor 自动 MDC 上下文传播。
+     * 在异步边界（如下游 IO 等待/返回）处自动恢复当前请求的 MDC context，
+     * 避免事件循环线程被复用后 traceId 被其他请求污染。
+     */
+    @PostConstruct
+    public void enableMdcPropagation() {
+        Hooks.enableAutomaticContextPropagation();
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

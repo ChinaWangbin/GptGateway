@@ -35,6 +35,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- 升级 reactor-core 到 3.5.12 以支持 Hooks.enableAutomaticContextPropagation()
+             实现在异步边界自动恢复 MDC context，防止 traceId 跨请求污染 -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.5.12</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
