@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.example.gateway.config.GatewayFilterProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -40,6 +41,7 @@ public class GlobalRateLimitFilter implements GlobalFilter, Ordered {
     /**
      * 生产环境使用的构造方法，使用系统 UTC 时钟计算令牌补充时间。
      */
+    @Autowired
     public GlobalRateLimitFilter(GatewayFilterProperties properties) {
         this(properties, Clock.systemUTC());
     }

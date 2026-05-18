@@ -59,7 +59,7 @@ mvn -pl gateway spring-boot:run
 
 ### 5.1 模式一：Nacos 自定义路由（SSE）
 
-`demo-stream-service` 通过 Nacos 路由配置转发，不依赖服务注册。  
+`demo-stream-service` 通过 Nacos 路由配置转发，不依赖服务注册。网关启动后会监听 `gateway-routes.yaml`，修改 Nacos 配置即可动态新增、修改或删除自定义路由，无需重启网关。  
 网关地址：
 
 ```text
@@ -71,6 +71,13 @@ http://localhost:8080/stream-api/stream/ticks?count=5
 ```bash
 curl -N "http://localhost:8080/stream-api/stream/ticks?count=5"
 ```
+
+动态刷新验证：
+
+1. 在 Nacos 中把 `Path=/stream-api/**` 改为 `Path=/sse-api/**` 并发布。
+2. 不重启网关，访问 `curl -N "http://localhost:8080/sse-api/stream/ticks?count=5"` 应生效。
+3. 再访问旧路径 `/stream-api/...`，应不再命中该自定义路由。
+4. 删除 `spring.cloud.gateway.routes` 下的路由并发布，自定义路由应失效；服务发现自动路由不受影响。
 
 ### 5.2 模式二：Nacos 服务发现自动路由（JSON）
 
@@ -126,7 +133,7 @@ IntelliJ IDEA 建议开启：
 - 修改 Controller 方法内容：自动快速重启后生效。
 - 新增 Controller、新增接口、新增 Bean：自动快速重启后生效。
 - 修改 `application.yml`：自动快速重启后生效。
-- 修改 Nacos 中的 `gateway-routes.yaml`：网关可通过 Nacos 配置刷新加载，不一定需要本地重启。
+- 修改 Nacos 中的 `gateway-routes.yaml`：网关监听配置变更并刷新路由缓存，无需本地重启。
 - 修改 `pom.xml` 或新增依赖：通常需要停止并重新执行 `spring-boot:run`。
 
 注意：DevTools 是“自动快速重启”，不是 JVM 原地热替换。若要求新增 Controller/Bean 时进程完全不重启，需要使用 JRebel 或 DCEVM + HotswapAgent。

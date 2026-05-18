@@ -35,6 +35,11 @@ management:
         include: health,info,gateway
 
 gateway:
+  dynamic-route:
+    enabled: true
+    data-id: gateway-routes.yaml
+    group: GATEWAY_GROUP
+    timeout-ms: 3000
   filters:
     logging:
       enabled: true
