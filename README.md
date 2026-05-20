@@ -20,7 +20,7 @@ GptGateway
 - Spring Boot: 3.0.2
 - Spring Cloud: 2022.0.0
 - Spring Cloud Alibaba: 2022.0.0.0
-- Nacos: 2.x（`http://localhost:8848/nacos`）
+- Nacos: 2.x（`http://82.156.139.106:8848/nacos`）
 
 ## 3. Nacos 命名空间与配置
 

@@ -56,7 +56,7 @@ Always respond in Chinese-simplified
 
 ## Nacos 约定
 
-- 地址：`http://localhost:8848/nacos`，账号：`nacos / nacos`
+- 地址：`http://82.156.139.106:8848/nacos`，账号：`nacos / nacos`
 - 命名空间：`modelGateway`（ID 与名称一致）
 - 路由配置：Data ID `gateway-routes.yaml`，Group `GATEWAY_GROUP`
 

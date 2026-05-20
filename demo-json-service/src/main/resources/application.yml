@@ -6,7 +6,7 @@ spring:
     name: demo-json-service
   cloud:
     nacos:
-      server-addr: localhost:8848
+      server-addr: 82.156.139.106:8848
       username: nacos
       password: nacos
       discovery:
